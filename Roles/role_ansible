@@ -1,0 +1,152 @@
+What is an Ansible Role?
+
+=>A role in Ansible is a way to organize playbooks and reuse automation code.
+=>Instead of writing everything in one playbook, you can split tasks, handlers, templates, variables, and files into a standard directory structure.
+
+=>Roles make your automation modular, reusable, and easier to maintain.
+==============================================================================
+example: 1
+====================
+- hosts: webservers
+  become: true
+  become_user: root
+  tasks:
+  - name: create 3 directories on the host
+    file: path=/tmp/{{item}} state=directory
+	loop:
+	- mydir1
+	- mydir2
+	- mydir3
+=====================================
+Vars
+Handlers
+Tasks
+Files
+Meta
+
+these above 5 are mandatory field for roles
+==========================================
+
+- hosts: webservers
+  roles:
+    - tomcat
+    - nginx
+=====================
+- hosts: webservers
+  become: true
+  become_user: root
+  tasks:
+    - name: install httpd
+      yum: name=httpd state=present
+    - name: start httpd
+      service: name=httpd state=started
+    - name: deploy html file
+      copy: src=index.html dest=/var/www/html
+      notify: restart httpd
+  handlers:
+    - name: restart httpd
+      service: name=httpd state=restarted
+====================================
+cd /etc/ansible
+-------------------------
+ansible=>master.yaml
+          - roles
+		    - httpd
+            - nginx			
+       =>roles
+	       =>httpd
+		       =>tasks->main.yml
+		   ,   =>handlers=>main.yaml
+		       =>var=>main.yaml
+			   =>files->index.html
+		   =>nginx
+		       =>tasks->main.yml
+		   ,   =>handlers=>main.yaml
+		       =>var=>main.yaml
+			   =>files->index.html
+-----------------------------------------------------
+===========================
+using ansible galaxy
+=========================
+=>ansible-galaxy init <role_name>
+=>ansible-galaxy init mytomcat		   
+=====================================
+example-2 : using role need to deploy httpd
+===========================================================
+playbook
+ -roles
+   - tomcat 
+       Vars
+       Handlers
+       Tasks
+       Files
+       Meta
+----------------------------
+/etc/ansible/roles
+=>sudo mkdir apache
+=>/etc/ansible/roles/apache
+   --create all 5 directories
+         Vars
+		 Handlers
+		 Tasks
+		 Files
+		 Meta
+=>sudo mkdir files vars meta tasks handlers
+=>cd tasks
+  --create a file called main.yml
+    --sudo vi main.yml
+	   - name: Install httpd
+	     yum: name=httpd state=present
+	   - name: Start httpd
+	     service: name=httpd state=started
+	   - name: deploy html code
+	     copy: src=index.html dest={{dest_path}}
+	     notify: restart httpd
+		 
+=>cd handlers
+   --create a file called main.yml
+     --sudo vi main.yml
+	 ---------------------
+	   - name: restart httpd
+	     service: name=httpd state=restarted
+		 
+=>cd vars 
+   --create a file called main.yml	
+     --sudo vi main.yml
+-------------------------------	 
+dest_path: /var/www/html
+
+=>cd files
+
+-------------------------------
+sudo vi index.html
+----------------
+<h1> file from ansible today</h1>
+
+=============
+now we will deploy
+-----------
+install tree command to see the dir struct
+sudo yum install tree -y
+========
+how to call the roles
+ =>come out from roles dir 
+ =>in the ansible dir write a master playbook to call the roles
+    --sudo vi playbookRoles.yml
+	====================
+	
+	   - hosts: webservers
+	     become: true
+	     become_user: root
+	     roles:
+	      - httpd
+		 
+==================
+run the playbook
+  =>ansible-playbook playbookRoles.yml --syntax-check
+  =>ansible-playbook playbookRoles.yml
+
+========
+browser:
+ ----------
+ public ip:80
