@@ -150,3 +150,14 @@ run the playbook
 browser:
  ----------
  public ip:80
+
+=============================================
+==============================================
+
+creating a new  role
+=======================
+=>ansible-galaxy
+=>ansible-galaxy --help or ansible-galaxy -h
+=>ansible-galaxy init newrole
+
+ansible-galaxy init tomcat
